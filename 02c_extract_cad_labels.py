@@ -9,6 +9,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Extract CAD labels into cad_annotations
 # MAGIC %pip install "PyMuPDF>=1.24,<2"
 # MAGIC import fitz, re, json, os
 # MAGIC from pathlib import Path
@@ -83,6 +84,25 @@
 # MAGIC     rec=spark.read.format('binaryFile').load(f.path).select('content').first()
 # MAGIC     rows.extend(extract_pdf(bytes(rec.content),f.path))
 # MAGIC if not rows:raise RuntimeError('No labels found; verify PDFs and PDF_ROOT')
+# MAGIC
+# MAGIC # Same rule as 02b: one source file per drawing revision. A re-uploaded PDF of a known drawing
+# MAGIC # revision (e.g. a UUID-named app upload of CAD-0007) must not duplicate labels.
+# MAGIC # Drawing/revision per file comes from ai_extraction_raw; prefer the drawing_registry file, then the lowest path.
+# MAGIC def val(x): return x.get('value') if isinstance(x,dict) and 'value' in x else x
+# MAGIC registry={(r.drawing_id,r.revision):r.source_file for r in spark.table(f'{BASE}.drawing_registry').select('drawing_id','revision','source_file').collect()}
+# MAGIC by_rev={}
+# MAGIC for r in spark.sql(f'SELECT source_file, to_json(extracted) AS payload FROM {BASE}.ai_extraction_raw').collect():
+# MAGIC     resp=json.loads(r.payload or '{}').get('response') or {}
+# MAGIC     key=(str(val(resp.get('drawing_id')) or ''),str(val(resp.get('revision')) or ''))
+# MAGIC     if all(key): by_rev.setdefault(key,[]).append(r.source_file)
+# MAGIC dropped_files=set()
+# MAGIC for key,files in by_rev.items():
+# MAGIC     keep=sorted(files,key=lambda f:(Path(f).name!=registry.get(key),f))[0]
+# MAGIC     dropped_files.update(f for f in files if f!=keep)
+# MAGIC raw_count=len(rows)
+# MAGIC rows=[r for r in rows if r[1] not in dropped_files]  # files without an extraction record are kept
+# MAGIC print('DUPLICATE_FILES_SKIPPED=',sorted(Path(f).name for f in dropped_files),'| LABELS_DROPPED=',raw_count-len(rows))
+# MAGIC
 # MAGIC df=spark.createDataFrame(rows,schema)
 # MAGIC df.write.mode('overwrite').option('overwriteSchema','true').saveAsTable(f'{BASE}.cad_annotations')
 # MAGIC print('CAD_ANNOTATIONS_TOTAL=',df.count())

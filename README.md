@@ -4,6 +4,11 @@ End-to-end Databricks demo that turns engineering drawings (PDF) into governed b
 
 All data is synthetic and for demonstration only.
 
+For reviewers:
+
+* [EVIDENCE.md](EVIDENCE.md): captured run output. It covers table row counts, BOM accuracy against ground truth, CAD label and vision-fallback checks, forecast quality, and the app's deployment status.
+* [BUILD_LOG.md](BUILD_LOG.md): how the project was built with an AI assistant. It covers who decided what, nine concrete moments where the AI changed the outcome, and the guardrails used.
+
 ## KPIs and owners
 
 Each KPI has one accountable owner and drives a recurring decision. Demo values come from [EVIDENCE.md](EVIDENCE.md) and run on synthetic data. They show that the metric can be computed; they are not customer results.
@@ -41,6 +46,8 @@ Each KPI has one accountable owner and drives a recurring decision. Demo values 
 06_validation.sql             Post-deployment row-count validation
 07_lakeflow_consumption.py    Lakeflow pipeline source (Auto Loader bronze/silver)
 08_cad_annotations_validation.sql  Validation queries for cad_annotations (run after 02c)
+EVIDENCE.md                   Captured execution evidence and validation results
+BUILD_LOG.md                  AI-assisted build log: decisions, moments, guardrails
 lakebase_schema.sql           Lakebase document_review table DDL
 manufacturing-cad-app/        Databricks App (Streamlit)
   app.py                      UI: overview, upload and review, analytics, forecast, plant map, CAD labels, Genie

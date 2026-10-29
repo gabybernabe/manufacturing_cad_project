@@ -73,6 +73,12 @@ def load_all():
     bom['qty']=pd.to_numeric(bom['qty']).fillna(0)
     return usage,fc,plants,bom,datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
+@st.cache_data(ttl=300,show_spinner='Loading CAD annotations...')
+def load_annotations():
+    a=data('cad_annotations')
+    for c in ['page_number','x0','y0','x1','y1']: a[c]=pd.to_numeric(a[c])
+    return a
+
 def style(fig,height=380,unified=True):
     fig.update_layout(template='plotly_white',colorway=COLORWAY,height=height,margin=dict(l=10,r=10,t=40,b=10),
         font=dict(family='Inter, Segoe UI, sans-serif',color='#0B2545'),hovermode='x unified' if unified else 'closest',
@@ -101,7 +107,7 @@ st.markdown(f'''<div class="mfg-header">
 </div>''',unsafe_allow_html=True)
 
 # ---------- Nav bar ----------
-PAGES=['Overview','Upload & review','Analytics','Demand forecast','Plant network','Ask Genie']
+PAGES=['Overview','Upload & review','Analytics','Demand forecast','Plant network','CAD labels','Ask Genie']
 with st.container(key='navbar'):
     page=st.radio('Navigation',PAGES,horizontal=True,label_visibility='collapsed',key='nav')
 
@@ -135,7 +141,7 @@ if data_ok:
     f=f_all if fmonth=='All' else f_all[f_all.m==fmonth]
     p=plants[plants.plant_id.isin(sel_plants)] if sel_plants else plants
     b=bom[bom.part_id.isin(sel_parts)] if sel_parts else bom
-elif page not in ('Upload & review','Ask Genie'):
+elif page not in ('Upload & review','CAD labels','Ask Genie'):
     st.error(f'Analytics query failed: {load_err}')
 
 # ---------- Pages ----------
@@ -331,6 +337,31 @@ elif page=='Plant network' and data_ok:
             fig.update_layout(coloraxis_showscale=False)
             st.plotly_chart(style(fig,560,False),width='stretch')
         st.dataframe(geo.drop(columns=['elev','value','color']),width='stretch',hide_index=True)
+
+elif page=='CAD labels':
+    section('CAD drawing labels and callouts')
+    st.caption('Text-layer extraction with page coordinates; visual-only labels require the optional vision step.')
+    try:
+        annotations=load_annotations()
+        drawings=sorted(annotations.drawing_id.dropna().unique().tolist())
+        if not drawings: st.info('No CAD annotations extracted yet.')
+        else:
+            c1,c2=st.columns([1,2])
+            selected_drawing=c1.selectbox('Drawing',drawings)
+            filtered=annotations[annotations.drawing_id==selected_drawing].copy()
+            types=sorted(filtered.label_type.dropna().unique().tolist())
+            selected_types=c2.multiselect('Annotation types',types,default=types)
+            filtered=filtered[filtered.label_type.isin(selected_types)]
+            k=st.columns(3)
+            k[0].metric('Detected labels',fmt(len(filtered)))
+            k[1].metric('Matched to BOM',fmt((filtered.review_status=='MATCHED').sum()))
+            k[2].metric('Pages',fmt(filtered.page_number.nunique()))
+            st.dataframe(filtered[['page_number','label_text','label_type','matched_part_id','review_status','x0','y0','x1','y1']],
+                width='stretch',hide_index=True)
+            st.info('Coordinates are PDF points (origin top-left). MATCHED means linked to a BOM item in the demo PDF; '
+                'verify against extracted_bom before approval.')
+    except Exception as exc:
+        st.warning(f'CAD annotations unavailable: {exc}. Run 02c_extract_cad_labels first.')
 
 elif page=='Ask Genie':
     section('Ask Genie about parts, demand, or plants')

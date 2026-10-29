@@ -22,14 +22,17 @@ All data is synthetic and for demonstration only.
 01_setup_and_seed.py          Create schema/volume and seed Delta tables from CSVs
 02_pdf_ai_extract.sql         Parse PDFs and extract drawing BOMs with AI Functions
 02b_normalize_extraction.py   Normalize AI extraction output into extracted_bom
+02c_extract_cad_labels.py     Extract CAD text-layer labels/callouts with page coordinates into cad_annotations
+02d_vision_fallback.py        Optional multimodal extraction for rasterized labels (needs a vision endpoint)
 03_forecast.py                3-month part consumption and shortage forecast
 04_genie_queries.sql          Verified example queries for the Genie space
 05_load_full_dataset.sql      Note: reference outputs are not loaded to production
 06_validation.sql             Post-deployment row-count validation
 07_lakeflow_consumption.py    Lakeflow pipeline source (Auto Loader bronze/silver)
+08_cad_annotations_validation.sql  Validation queries for cad_annotations (run after 02c)
 lakebase_schema.sql           Lakebase document_review table DDL
 manufacturing-cad-app/        Databricks App (Streamlit)
-  app.py                      UI: overview, upload and review, analytics, forecast, plant map, Genie
+  app.py                      UI: overview, upload and review, analytics, forecast, plant map, CAD labels, Genie
   lakebase.py                 Lakebase connection with OAuth token per connection
   app.yaml                    App command and environment / resource bindings
   requirements.txt            Python dependencies
@@ -40,9 +43,10 @@ manufacturing-cad-app/        Databricks App (Streamlit)
 1. `01_setup_and_seed` - upload `seed/*.csv` and `incoming/*.pdf` to the `raw_drawings` volume first.
 2. `02_pdf_ai_extract.sql` on a serverless SQL warehouse.
 3. `02b_normalize_extraction`.
-4. `03_forecast`.
-5. Create a Genie space over `plants`, `parts`, `monthly_consumption`, `extracted_bom`, `part_forecast`.
-6. Deploy the app (below).
+4. `02c_extract_cad_labels` (optionally `02d_vision_fallback`), then `08_cad_annotations_validation.sql`.
+5. `03_forecast`.
+6. Create a Genie space over `plants`, `parts`, `monthly_consumption`, `extracted_bom`, `part_forecast`.
+7. Deploy the app (below).
 
 ## Deploying the app
 

@@ -1,0 +1,22 @@
+command: ['streamlit','run','app.py','--server.address','0.0.0.0','--server.port','8000','--server.headless','true']
+env:
+  - name: CATALOG
+    value: 'gabi_bosch_sandbox_catalog'
+  - name: SCHEMA
+    value: 'cad_intelligence'
+  - name: WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: EXTRACTION_JOB_ID
+    valueFrom: extraction_job
+  - name: GENIE_SPACE_ID
+    valueFrom: genie-space
+  - name: VOLUME_PATH
+    value: '/Volumes/gabi_bosch_sandbox_catalog/cad_intelligence/raw_drawings'
+  - name: ENDPOINT_NAME
+    valueFrom: postgres
+  - name: PGHOST
+    value: 'ep-red-frog-d7zo7uag.database.eu-central-1.cloud.databricks.com'
+  - name: PGDATABASE
+    value: 'databricks_postgres'
+  - name: PGSSLMODE
+    value: 'require'

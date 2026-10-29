@@ -1,0 +1,2 @@
+-- DO NOT load reference outputs into production tables.
+-- Run 01_setup_and_seed.py instead; it isolates expected_* reference tables.

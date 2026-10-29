@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Streamlit / secrets
+.streamlit/secrets.toml
+.env
+
+# Databricks
+.databricks/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

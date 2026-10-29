@@ -4,6 +4,17 @@ End-to-end Databricks demo that turns engineering drawings (PDF) into governed b
 
 All data is synthetic and for demonstration only.
 
+## KPIs and owners
+
+Each KPI has one accountable owner and drives a recurring decision. Demo values come from [EVIDENCE.md](EVIDENCE.md) and run on synthetic data. They show that the metric can be computed; they are not customer results.
+
+| KPI | Definition | Accountable owner | Decision it drives | Cadence | Demo value |
+| --- | --- | --- | --- | --- | --- |
+| CAD extraction accuracy | Share of BOM lines (part, qty, material, revision) extracted correctly from drawing PDFs | Head of Engineering / PLM | Whether an extracted BOM can be released without manual re-entry | Per drawing release | 72 / 72 lines (100%) |
+| Forecast error (WAPE) | Weighted absolute % error of forecast vs actual part consumption, per plant and part | Demand Planning Lead | Safety-stock levels and forecast overrides | Monthly S&OP | 2.05% (vs the reference forecast; no actuals yet for the forecast months) |
+| Projected shortage quantity | Units by which forecast demand exceeds the remaining stock on hand, per plant, part and month (open purchase orders are not yet netted) | Plant Operations Manager | Expediting, moving stock between plants, production re-sequencing | Weekly | 4,086 units across 119 of 216 plant-part-months |
+| Procurement planning lead time | Time from a drawing revision being released to purchase orders being placed for its new or changed parts | VP Procurement | Supplier order timing; reduction of spot buys and expedite fees | Monthly | Not measured in the demo; baseline it in a pilot from PLM release dates and ERP PO timestamps |
+
 ## Architecture
 
 | Layer | Technology | Assets |
